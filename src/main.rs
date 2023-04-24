@@ -1,4 +1,6 @@
 fn estimate_size(x: u32) -> u32 {
+    assert!(x < 4096);
+
     if x < 256 {
         if x < 128 {
             return 1;
@@ -7,7 +9,7 @@ fn estimate_size(x: u32) -> u32 {
         }
     } else if x < 1024 {
         if x > 1022 {
-            panic!("Oh no, a failing corner case!");
+            return 4;
         } else {
             return 5;
         }
@@ -24,7 +26,9 @@ fn estimate_size(x: u32) -> u32 {
 #[kani::proof]
 fn check_estimate_size() {
     let x: u32 = kani::any();
-    estimate_size(x);
+    kani::assume(x < 4096);
+    let y = estimate_size(x);
+    assert!(y < 10);
 }
 
 fn main() {
