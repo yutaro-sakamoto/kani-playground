@@ -38,14 +38,16 @@ fn get_wrapped(i: usize, a: &[u32]) -> u32 {
     return a[(i % a.len() + 1) % a.len()];
 }
 
+fn simple_addition(a: u32, b: u32) -> u32 {
+    a + b
+}
+
 #[cfg(kani)]
 #[kani::proof]
-fn bound_check() {
-    let size: usize = kani::any();
-    kani::assume(size < 4096);
-    let index: usize = kani::any();
-    let array: Vec<u32> = vec![0; size];
-    get_wrapped(index, &array);
+fn add_overflow() {
+    let a: u32 = kani::any();
+    let b: u32 = kani::any();
+    simple_addition(a, b);
 }
 
 fn main() {
