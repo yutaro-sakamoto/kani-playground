@@ -50,6 +50,21 @@ fn add_overflow() {
     simple_addition(a, b);
 }
 
+fn find_midpoint(low: u32, high: u32) -> u32 {
+    let low_u64 = low as u64;
+    let high_u64 = high as u64;
+    ((low_u64 + high_u64) / 2) as u32
+}
+
+#[cfg(kani)]
+#[kani::proof]
+fn midpoint_overflow() {
+    let a = kani::any();
+    let b = kani::any();
+    //kani::assume(a < b);
+    find_midpoint(a, b);
+}
+
 fn main() {
     println!("Hello, world!");
 }
