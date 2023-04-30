@@ -1,3 +1,6 @@
+use std::num::NonZeroU32;
+use vector_map::VecMap;
+
 fn estimate_size(x: u32) -> u32 {
     assert!(x < 4096);
 
@@ -75,17 +78,55 @@ fn initialize_prefix(length: usize, buffer: &mut [u8]) {
     }
 }
 
+//#[cfg(kani)]
+//#[kani::proof]
+//#[kani::unwind(11)]
+//fn check_initialize_prefix() {
+//    const LIMIT: usize = 10;
+//    let mut buffer: [u8; LIMIT] = [1; LIMIT];
+//
+//    let length = kani::any();
+//    kani::assume(length <= LIMIT);
+//
+//    initialize_prefix(length, &mut buffer);
+//}
+
+pub type ProductId = u32;
+
+pub struct Inventory {
+    pub inner: VecMap<ProductId, NonZeroU32>,
+}
+
+impl Inventory {
+    pub fn update(&mut self, id: ProductId, new_quantity: NonZeroU32) {
+        self.inner.insert(id, new_quantity);
+    }
+
+    pub fn get(&self, id: &ProductId) -> Option<NonZeroU32> {
+        self.inner.get(id).cloned()
+    }
+}
+
 #[cfg(kani)]
 #[kani::proof]
-#[kani::unwind(11)]
-fn check_initialize_prefix() {
-    const LIMIT: usize = 10;
-    let mut buffer: [u8; LIMIT] = [1; LIMIT];
+#[kani::unwind(3)]
+pub fn safe_update() {
+    let mut inventory = Inventory {
+        inner: VecMap::new(),
+    };
 
-    let length = kani::any();
-    kani::assume(length <= LIMIT);
+    // Crate non-determinisitic variables for id and quantity.
+    let id: ProductId = kani::any();
+    let quantity: NonZeroU32 = kani::any();
 
-    initialize_prefix(length, &mut buffer);
+    assert!(
+        quantity.get() != 0,
+        "NonZeroU32 is internally a u32 but it should never be 0."
+    );
+
+    //Update the inventory and check the result
+    inventory.update(id, quantity);
+    assert!(inventory.get(&id).unwrap() == quantity);
 }
 
 fn main() {
